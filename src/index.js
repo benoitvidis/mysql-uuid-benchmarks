@@ -64,6 +64,7 @@ async function bench (fn) {
     let sum = 0
 
     const f = fs.createWriteStream(path.join(__dirname, `../out/${db}.${item}.csv`));
+    f.write(`;${db}.${item}\n`)
 
     for (let i = 0; i < max; i++) {
       if (i && i % step === 0) {
@@ -74,19 +75,21 @@ async function bench (fn) {
       sum += await bench(() => client.query(query))
     }
 
-    console.log(` ${Number(process.hrtime.bigint() - starg) / 1000000}ms`);
+    console.log(` ${Number(process.hrtime.bigint() - start) / 1000000}ms`);
     f.close()
 
     // get sample uuids
     {
       const uuids = await client.query(`
+        SELECT  uuid
+        FROM    ${item}
+        ORDER BY RAND()
+        LIMIT   :sample
       `, {
-        replacements: {
-
-        },
+        replacements: { sample },
         type: client.QueryTypes.SELECT
       })
-        .map(({ uuid }) => typeof uuid === 'string' ? uuid : uuid.toString('hex'))
+        .map(({ uuid }) => ['number', 'string'].includes(typeof uuid) ? uuid : uuid.toString('hex'))
 
       fs.writeFileSync(
         path.join(__dirname, `../out/${db}.${item}.samples.json`),
@@ -94,4 +97,6 @@ async function bench (fn) {
       )
     }
   }
+
+  process.exit(0)
 })()

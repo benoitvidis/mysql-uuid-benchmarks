@@ -29,6 +29,7 @@ async function bench (fn) {
     const uuids = require(`../out/${db}.${item}.sample.json`)
 
     const f = fs.createWriteStream(path.join(__dirname, `../out/${db}.${item}.select.csv`))
+    f.write(`;${db}.${item}\n`)
 
     for (const u of uuids) {
       let uuid
@@ -45,13 +46,10 @@ async function bench (fn) {
 
       const ms = await bench(() => client.query(`
         SELECT *
-        FROM  :item
+        FROM  ${item}
         WHERE uuid = :uuid
       `, {
-        replacements: {
-          item,
-          uuid
-        },
+        replacements: { uuid },
         type: client.QueryTypes.SELECT
       }));
 
