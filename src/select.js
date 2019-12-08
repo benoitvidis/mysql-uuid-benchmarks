@@ -17,46 +17,41 @@ async function bench (fn) {
 }
 
 (async () => {
-  const db = process.argv[2];
-  const client = clients[db];
+  const db = process.argv[2]
+  const item = process.argv[3]
 
-  for (const item of [
-    'id',
-    'uuid',
-    'binuuid',
-    'obinuuid'
-  ]) {
-    const uuids = require(`../out/${db}.${item}.sample.json`)
+  const client = clients[db]
 
-    const f = fs.createWriteStream(path.join(__dirname, `../out/${db}.${item}.select.csv`))
-    f.write(`;${db}.${item}\n`)
+  const uuids = require(`../out/${db}.${item}.samples.json`)
 
-    for (const u of uuids) {
-      let uuid
-      switch (item) {
-        case 'id':
-          uuid = Number.parseInt(u)
-          break
-        case 'uuid':
-          uuid = u
-          break
-        default:
-          uuid = Buffer.from(u, 'hex')
-      }
+  const f = fs.createWriteStream(path.join(__dirname, `../out/${db}.${item}.select.csv`))
+  f.write(`;${db}.${item}\n`)
 
-      const ms = await bench(() => client.query(`
+  for (const u of uuids) {
+    let uuid
+    switch (item) {
+      case 'id':
+        uuid = Number.parseInt(u)
+        break
+      case 'uuid':
+        uuid = u
+        break
+      default:
+        uuid = Buffer.from(u, 'hex')
+    }
+
+    const ms = await bench(() => client.query(`
         SELECT *
         FROM  ${item}
         WHERE uuid = :uuid
       `, {
-        replacements: { uuid },
-        type: client.QueryTypes.SELECT
-      }));
+      replacements: { uuid },
+      type: client.QueryTypes.SELECT
+    }));
 
-      f.write(`${u};${ms}\n`)
-    }
-
-    f.close()
+    f.write(`${u};${ms}\n`)
   }
+
+  f.close()
 
 })()
