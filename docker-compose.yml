@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  app:
+    image: node:10-alpine
+    command: tail -f /dev/null
+    working_dir: /var/app
+    environment:
+      NODE_ENV: production
+    volumes:
+      - .:/var/app
+
+  mysql5: &db
+    image: mysql:5
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: uuid
+
+  mysql8:
+    <<: *db
+    image: mysql:8
+
+  percona5:
+    <<: *db
+    image: percona:5
+
+  percona8:
+    <<: *db
+    image: percona:8
+
+  mariadb:
+    <<: *db
+    image: mariadb:10
+
